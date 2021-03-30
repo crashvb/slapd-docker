@@ -1,0 +1,18 @@
+#!/bin/bash
+
+set -e
+
+log "Starting supervisord ..."
+/usr/bin/supervisord --configuration=/etc/supervisor/supervisord.conf &
+sleep 1
+while [[ ! -f /run/slapd/slapd.pid ]] ; do
+	log "Waiting for slapd ..."
+	sleep 1
+done
+
+log "Testing ldaap ..."
+ldap-test
+
+log "--- Test Passed ---"
+exit 0
+

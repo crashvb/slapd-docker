@@ -88,7 +88,7 @@ if [[ ! -e "$EP_RUN" ]] ; then
 #	fi
 #	install --group=openldap --mode=0640 --owner=openldap $EP_SECRETS_ROOT/dhparams.pem /etc/ldap/dhparams.pem
 
-	if [[ ! -e $SLAPD_DIR/DB_CONFIG ]] ; then
+	if [[ ! -e $SLAPD_DIR/data.mdb ]] ; then
 		# Empty directory ...
 		log "Initializing directory ..."
 		while IFS='=' read -r key value

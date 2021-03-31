@@ -24,6 +24,12 @@ ldapsearch -b "$dn" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ userPassword
 
 read_password
 ldappasswd -d 256 -D "$olcRootDN" -H ldapi:// -s "$PASSWORD" -w "$(<$secret)" -x "${dn}"
+cat <<- EOF | ldapmodify -d 256 -D "$olcRootDN" -H ldapi:// -x -w "$(<$secret)"
+	dn: ${dn}
+	changetype: modify
+	replace: shadowLastChange
+	shadowLastChange: $(date "+%s")
+EOF
 
 log "Altered configuration:"
 ldapsearch -b "$dn" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ userPassword

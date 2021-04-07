@@ -31,7 +31,7 @@ cat <<- EOF | ldapadd -d 256 -D "$olcRootDN" -H ldapi:// -w "$(<$secret)" -x
 	objectClass: shadowAccount
 	objectClass: top
 	shadowLastChange: $(echo $(date "+%s")/60/60/24 | bc)
-	shadowMax: 0
+	shadowMax: 999
 	uid: ${name}
 	uidNumber: ${uidNumber}
 	userPassword: ${PASSWORD_HASH}

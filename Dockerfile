@@ -2,7 +2,7 @@ FROM crashvb/supervisord:202103212252
 LABEL maintainer "Richard Davis <crashvb@gmail.com>"
 
 # Install packages, download files ...
-RUN docker-apt gnutls-bin ldap-utils slapd ssl-cert
+RUN docker-apt bc gnutls-bin ldap-utils slapd ssl-cert
 
 # Configure: slapd
 ENV SLAPD_HOME=/etc/ldap SLAPD_DIR=/var/lib/ldap

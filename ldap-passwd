@@ -28,7 +28,7 @@ cat <<- EOF | ldapmodify -d 256 -D "$olcRootDN" -H ldapi:// -x -w "$(<$secret)"
 	dn: ${dn}
 	changetype: modify
 	replace: shadowLastChange
-	shadowLastChange: $(date "+%s")
+	shadowLastChange: $(echo $(date "+%s")/60/60/24 | bc)
 EOF
 
 log "Altered configuration:"

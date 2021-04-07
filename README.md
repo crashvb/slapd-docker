@@ -2,7 +2,7 @@
 
 ## Overview
 
-This docker image contains [slapd](http://www.openldap.org/) and [phpldapadmin](http://phpldapadmin.sourceforge.net/wiki/).
+This docker image contains [slapd](https://www.openldap.org/) and [phpldapadmin](https://phpldapadmin.sourceforge.net/wiki/).
 
 ## Entrypoint Scripts
 
@@ -40,6 +40,9 @@ The embedded entrypoint script is located at `/etc/entrypoint.d/10slapd` and per
 │        └─ slapd.conf
 ├─ run/
 │  └─ secrets/
+│     ├─ slapd.crt
+│     ├─ slapd.key
+│     ├─ slapdca.crt
 │     └─ ldap_admin_password
 └─ usr/
    └─ local/

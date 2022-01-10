@@ -21,16 +21,15 @@ if [[ ! -e "$EP_RUN" ]] ; then
 	# Generate passwords ...
 	generate_password ldap_admin
 
-	# Note: Key size must be >= 3072 for "HIGH" security:
-	#	https://www.gnutls.org/manual/html_node/Selecting-cryptographic-key-sizes.html#tab_003akey_002dsizes#
-
-	export SLAPD_CERT_DAYS=${SLAPD_CERT_DAYS:-30}
-	export SLAPD_KEY_SIZE=${SLAPD_KEY_SIZE:-4096}
-
 	# Generate keypairs ...
 	if [[ -e $EP_SECRETS_ROOT/slapdca.crt && -e $EP_SECRETS_ROOT/slapd.crt && -e $EP_SECRETS_ROOT/slapd.key ]] ; then
 		log "Importing slapdca.crt, slapd.crt, and slapd.key from secrets ..."
 	else
+		# Note: Key size must be >= 3072 for "HIGH" security:
+		#	https://www.gnutls.org/manual/html_node/Selecting-cryptographic-key-sizes.html#tab_003akey_002dsizes#
+		export SLAPD_CERT_DAYS=${SLAPD_CERT_DAYS:-30}
+		export SLAPD_KEY_SIZE=${SLAPD_KEY_SIZE:-4096}
+
 		log "Generating slapdca.crt, slapd.crt, and slapd.key in secrets ..."
 
 		log "	certificate authority"

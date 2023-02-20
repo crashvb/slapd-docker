@@ -37,6 +37,8 @@ NC="\033[0m"
 # 3 - command output (optional)
 function verify
 {
+	local result="${1}"
+
 	# Allowed ...
 	if [[ "${1}" -eq 0 ]] ; then
 		# ... supposed to allow
@@ -45,28 +47,32 @@ function verify
 		# ... supposed to reject
 		else
 			echo -e " [  ${RED}ALLOWED${NC} ]"
+			result=1
 		fi
 	# Rejected ...
 	else
 		# ... for the right reason
-		if [[ -n "${2}" && ${3} =~ ${2} ]] ; then
+		if [[ -n "${2}" && "${3}" =~ ${2} ]] ; then
 			echo -e "[ ${GREEN}REJECTED${NC} ]"
 			[[ -n ${DEBUG} ]] && echo -e "${BLUE}$(echo "${3}" | grep --extended-regexp "${2}" | awk '{$1=$1;print}')${NC}"
 		# ... for the wrong reason
 		else
 			echo -e "[  ${RED}FAILED${NC}  ]"
+			result=1
 			[[ -n "${2}" ]] && echo -e "${YELLOW}Expected: ${2}${NC}"
-			[[ -n "${DEBUG}" ]] && echo -e "${BLUE}${3}${NC}" || echo -e "${BLUE}$(echo "${3}" | grep --extended-regexp "${2}" | awk '{$1=$1;print}')${NC}"
+			[[ -n "${DEBUG}" ]] && echo -e "${BLUE}${3}${NC}"
 		fi
 	fi
 
-	return "${1}"
+	return "${result}"
 }
 
 function test_ldapsearch
 {
 	local base="${1}"
 	log "Base: ${BOLD}${YELLOW}${base}${NC} ..."
+
+	local result=0
 
 	for uri in ldap ldapi ldaps
 	do
@@ -81,15 +87,19 @@ function test_ldapsearch
 			else
 				cmd="${prefix} ${args[${arg}]} ${suffix}"
 				tmp=$(eval "${cmd}" 2>&1)
-				verify $? "${expected[${uri}, ${arg}]}" "${tmp}"
+				verify $? "${expected[${uri}, ${arg}]}" "${tmp}" || result=1
 				[[ -n ${DEBUG} ]] && echo -e "${GRAY}${cmd}${NC}"
 			fi
 		done
 	done
+
+	return "${result}"
 }
 
 function test_tls
 {
+	local result=0
+
 	# Note: ssl2, ssl3 are not compiled in by default anymore
 	local version="tls1 tls1_1 tls1_2 tls1_3"
 	local ciphers="$(openssl ciphers "ALL:eNULL" | tr ":" "\n" | sort | tr "\n" " ")"
@@ -102,7 +112,7 @@ function test_tls
 			[[ "${version}" == "tls1_3" ]] && arg="-ciphersuites" || arg="-cipher"
 
 			cmd="openssl s_client ${arg} ${cipher} -connect "$(hostname):636" -${version} -CAfile /etc/ssl/certs/slapdca.crt -cert /etc/ssl/certs/slapd.crt -key /etc/ssl/private/slapd.key -verify_return_error -state"
-			#verify $? "${expected[${version}, ${cipher}]}" "${tmp}"
+			#verify $? "${expected[${version}, ${cipher}]}" "${tmp}" || result=1
 			if [[ -n "${expected[${version}, ${cipher}]+abc}" ]] ; then
 				val="${expected[${version}, ${cipher}]}"
 			else
@@ -110,10 +120,12 @@ function test_tls
 			fi
 			# val="" mean it should be allowed to connect
 			tmp=$(eval "${cmd}" < /dev/null 2>&1)
-			verify $? "${val}" "${tmp}"
+			verify $? "${val}" "${tmp}" || result=1
 			[[ -n ${DEBUG} ]] && echo -e "${GRAY}${cmd}${NC}"
 		done
 	done
+
+	return "${result}"
 }
 
 secrets="${EP_SECRETS_ROOT}/ldap_admin_password"
@@ -128,6 +140,8 @@ olcSuffix="$(grep "olcSuffix" "${SLAPD_CONFIG}/slapd.d/cn=config/olcDatabase={1}
 olcRootDN="$(grep "olcRootDN" "${SLAPD_CONFIG}/slapd.d/cn=config/olcDatabase={1}mdb.ldif" | awk '{print $2}')"
 
 log "Testing: ${BOLD}${YELLOW}ldapsearch${NC} ..."
+
+result=0
 
 # Note: * cn=config has no user cn=admin,cn=config (so it simple_bind will never pass)
 #	* Due to SSF=256, only TLS requestd / TLS forced with SASL should pass ...
@@ -144,8 +158,8 @@ done < /usr/local/share/ldap/ldap-test.ldapsearch.config.expected
 
 # Note: Associative arrays cannot be passed to bash functions
 #       https://stackoverflow.com/a/8879444/1201075
-#test_ldapsearch "cn=config" "${expected[@]}" "${args[@]}"
-test_ldapsearch "cn=config"
+#test_ldapsearch "cn=config" "${expected[@]}" "${args[@]}" || result=1
+test_ldapsearch "cn=config" || result=1
 
 unset args ; declare -A args
 while IFS= read -r line; do
@@ -157,7 +171,7 @@ while IFS= read -r line; do
 	expected[${line%%=*}]=${line#*=}
 done < /usr/local/share/ldap/ldap-test.ldapsearch.olcsuffix.expected
 
-test_ldapsearch "${olcSuffix}"
+test_ldapsearch "${olcSuffix}" || result=1
 
 log "Testing: ${BOLD}${YELLOW}TLS protocols / ciphers${NC} ..."
 
@@ -166,7 +180,7 @@ while IFS= read -r line; do
 	expected[${line%%=*}]=${line#*=}
 done < /usr/local/share/ldap/ldap-test.tls.expected
 
-test_tls
+test_tls || result=1
 
 log "${BOLD}${YELLOW}Supported Ciphers:${NC}"
 #nmap -Pn -p T:636 --script ssl-enum-ciphers localhost
@@ -175,4 +189,6 @@ gnutls-cli --priority "${TLS_CIPHER_SUITE}" --list
 log "${BOLD}${YELLOW}GNUTLS Debugging:${NC}"
 #gnutls-cli-debug --port=636 --starttls-proto=ldap localhost
 gnutls-cli --port 636 --priority "${TLS_CIPHER_SUITE}" --x509cafile /etc/ssl/certs/slapdca.crt --x509certfile /etc/ssl/certs/slapd.crt --x509keyfile /etc/ssl/private/slapd.key "$(hostname)" < /dev/null | sed -n "/Description/,\$p"
+
+exit "${result}"
 

@@ -2,6 +2,10 @@
 
 set -e -o pipefail
 
+RED="\033[0;31m"
+GREEN="\033[0;32m"
+NC="\033[0m"
+
 log "Starting supervisord ..."
 [[ -n "${DEBUG_WITH_SLAPD}" ]] || \
 	sed --expression="s/stderr/null/g" \
@@ -14,14 +18,20 @@ while [[ ! -f /run/slapd/slapd.pid ]] ; do
 	sleep 1
 done
 
-log "Verifying test context ..."
+log "Verifying: test context ..."
 ldapwhoami -Y EXTERNAL -H ldap:/// -ZZ
 ldapwhoami -Y EXTERNAL -H ldapi:/// -ZZ
 ldapwhoami -Y EXTERNAL -H ldaps:///
 
-log "Testing ldap ..."
-ldap-test
+result=0
 
-log "--- Test Passed ---"
-exit 0
+log "Testing ldap ..."
+ldap-test || result=1
+
+if [[ "${result}" -eq 0 ]] ; then
+	log "--- ${GREEN}Test Passed${NC} ---"
+else
+	log "--- ${RED}Test FAILED${NC} ---"
+fi
+exit "${result}"
 

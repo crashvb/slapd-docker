@@ -1,29 +1,28 @@
 #!/bin/bash
 
-set -e
+set -e -o pipefail
 
 source /usr/local/lib/entrypoint.sh
 source /usr/local/lib/ldaputils.sh
 
-if [[ -z $1 || -n $2 ]] ; then
-	echo "usage $0 <name>" >&2
+if [[ -z "${1}" || -n "${2}" ]] ; then
+	echo "usage ${0} <name>" >&2
 	exit 1
 fi
 
-fail_if_admin "$1"
+fail_if_admin "${1}"
 
 name="${1,,}"
 dn="cn=${name},${olcSuffix}"
 
-log "You are about to ${BOLD_RED}DELETE${NC} the superuser: ${BOLD_RED}$dn${NC}"
-read -p "Are you sure you want to continue? [y/N] " -r
-[[ ! $REPLY =~ ^[Yy]$ ]] && exit 1
+log "You are about to ${BOLD_RED}DELETE${NC} the superuser: ${BOLD_RED}${dn}${NC}"
+prompt_continue
 
 log "Existing configuration:"
-ldapsearch -b "$dn" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ
+ldapsearch -b "${dn}" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ
 
-ldapdelete -d 256 -D "$olcRootDN" -H ldapi:// -w "$(<$secret)" -x "$dn"
+ldapdelete -d 256 -D "${olcRootDN}" -H ldapi:// -w "$(<"${secret}")" -x "${dn}"
 
 log "Altered Configuration:"
-ldapsearch -b "$dn" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ || true
+ldapsearch -b "${dn}" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ || true
 

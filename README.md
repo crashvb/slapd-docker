@@ -24,8 +24,6 @@ The embedded entrypoint script is located at `/etc/entrypoint.d/10slapd` and per
  | LDAP\_DOMAIN | example.com | The name of the ldap domain |
  | LDAP\_ORGANIZATION | Example Company | The name of the ldap organization. |
  | LDAP\_SUFFIX | _derived_ | The corresponding ldap suffix (base DN) |
- | SLAPD\_CERT\_DAYS | 30 | Validity period of any generated PKI certificates. |
- | SLAPD\_KEY\_SIZE | 4096 | Key size of any generated PKI keys. |
  | TLS\_CIPHER\_SUITE | SECURE256:-VERS-TLS-ALL:+VERS-TLS1.3:+VERS-TLS1.2:+VERS-DTLS1.2:+SIGN-RSA-SHA256:%SAFE\_RENEGOTIATION:%STATELESS\_COMPRESSION:%LATEST\_RECORD\_VERSION | The TLS ciphers use to restrict connects. |
 
 3. The following configurations are added: `OrganizationalUnits` and `PosixGroups`.

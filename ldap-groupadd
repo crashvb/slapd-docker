@@ -1,24 +1,24 @@
 #!/bin/bash
 
-set -e
+set -e -o pipefail
 
 source /usr/local/lib/entrypoint.sh
 source /usr/local/lib/ldaputils.sh
 
-if [[ -z $2 || -n $3 ]] ; then
-	echo "usage $0 <name> <gidNumber>" >&2
-	echo "ex: $0 users 513" >&2
+if [[ -z "${2}" || -n "${3}" ]] ; then
+	echo "usage ${0} <name> <gidNumber>" >&2
+	echo "ex: ${0} users 513" >&2
 	exit 1
 fi
 
-fail_if_admin "$1"
+fail_if_admin "${1}"
 
 name="${1,,}"
 dn="cn=${name},ou=groups,${olcSuffix}"
-gidNumber=$2
+gidNumber="${2}"
 
-log "Creating group: $dn ..."
-cat <<- EOF | ldapadd -d 256 -D "$olcRootDN" -H ldapi:// -w "$(<$secret)" -x
+log "Creating group: ${dn} ..."
+cat <<- EOF | ldapadd -d 256 -D "${olcRootDN}" -H ldapi:// -w "$(<"${secret}")" -x
 	dn: ${dn}
 	cn: ${name}
 	gidNumber: ${gidNumber}
@@ -27,5 +27,5 @@ cat <<- EOF | ldapadd -d 256 -D "$olcRootDN" -H ldapi:// -w "$(<$secret)" -x
 EOF
 
 log "Altered Configuration:"
-ldapsearch -b "$dn" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ
+ldapsearch -b "${dn}" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ
 

@@ -1,8 +1,12 @@
 #!/bin/bash
 
-set -e
+set -e -o pipefail
 
 log "Starting supervisord ..."
+[[ -n "${DEBUG_WITH_SLAPD}" ]] || \
+	sed --expression="s/stderr/null/g" \
+		--expression="s/stdout/null/g" \
+		--in-place /etc/supervisor/conf.d/slapd.conf
 /usr/bin/supervisord --configuration=/etc/supervisor/supervisord.conf &
 sleep 1
 while [[ ! -f /run/slapd/slapd.pid ]] ; do
@@ -10,7 +14,12 @@ while [[ ! -f /run/slapd/slapd.pid ]] ; do
 	sleep 1
 done
 
-log "Testing ldaap ..."
+log "Verifying test context ..."
+ldapwhoami -Y EXTERNAL -H ldap:/// -ZZ
+ldapwhoami -Y EXTERNAL -H ldapi:/// -ZZ
+ldapwhoami -Y EXTERNAL -H ldaps:///
+
+log "Testing ldap ..."
 ldap-test
 
 log "--- Test Passed ---"

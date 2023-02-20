@@ -1,0 +1,17 @@
+#!/bin/bash
+
+set -e -o pipefail
+
+source /usr/local/lib/entrypoint.sh
+source /usr/local/lib/ldaputils.sh
+
+if [[ -n "${1}" ]] ; then
+	echo "usage ${0}" >&2
+	exit 1
+fi
+
+fail_if_admin "${1}"
+
+log "Existing superusers:"
+ldapsearch -b "${olcSuffix}" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ "(objectclass=simpleSecurityObject)" "dn"
+

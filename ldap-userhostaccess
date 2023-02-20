@@ -1,32 +1,35 @@
 #!/bin/bash
 
-set -e
+set -e -o pipefail
 
 source /usr/local/lib/entrypoint.sh
 source /usr/local/lib/ldaputils.sh
 
-if [[ -z $2 || -n $4 ]] ; then
-	echo "usage $0 <name> <host> [ <action=add|delete> ]" >&2
-	echo "ex: testuser testbox" >&2
+if [[ -z "${2}" || -n "${4}" ]] ; then
+	echo "usage ${0} <name> [ <action=add|delete|list> [ <host> ] ]" >&2
+	echo "ex: ${0} myuser" >&2
+	echo "ex: ${0} myuser add mybox" >&2
 	exit 1
 fi
 
-fail_if_admin "$1"
+fail_if_admin "${1}"
 
 name="${1,,}"
-host="${2,,}"
-action="${3:-add}"
+action="${2:-list}"
+host="${3,,}"
 dn="cn=${name},ou=users,${olcSuffix}"
 
-if [[ $action != "add" && $action != "delete" ]] ; then
-	echo "Unsupported action: $action" >&2
+if [[ "${action}" != "add" && "${action}" != "delete" && "${action}" != "list" ]] ; then
+	echo "Unsupported action: ${action}" >&2
 	exit 1
 fi
 
 log "Existing configuration:"
-ldapsearch -b "$dn" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ
+ldapsearch -b "${dn}" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ
 
-cat <<- EOF | ldapmodify -d 256 -D "$olcRootDN" -H ldapi:// -x -w "$(<$secret)"
+[[ "${action}" == "list" ]] && exit 0
+
+cat <<- EOF | ldapmodify -d 256 -D "${olcRootDN}" -H ldapi:// -x -w "$(<"${secret}")"
 	dn: ${dn}
 	changetype: modify
 	${action}: host
@@ -34,5 +37,5 @@ cat <<- EOF | ldapmodify -d 256 -D "$olcRootDN" -H ldapi:// -x -w "$(<$secret)"
 EOF
 
 log "Altered configuration:"
-ldapsearch -b "$dn" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ
+ldapsearch -b "${dn}" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ
 

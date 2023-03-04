@@ -1,10 +1,10 @@
-FROM crashvb/supervisord:202302200210@sha256:7ad51ecd78041df68ff7800cbbb6ebd6c0b5644e1c8ff80bd55943710d2dd42d
+FROM crashvb/supervisord:202303031721@sha256:6ff97eeb4fbabda4238c8182076fdbd8302f4df15174216c8f9483f70f163b68
 ARG org_opencontainers_image_created=undefined
 ARG org_opencontainers_image_revision=undefined
 LABEL \
 	org.opencontainers.image.authors="Richard Davis <crashvb@gmail.com>" \
-	org.opencontainers.image.base.digest="sha256:7ad51ecd78041df68ff7800cbbb6ebd6c0b5644e1c8ff80bd55943710d2dd42d" \
-	org.opencontainers.image.base.name="crashvb/supervisord:202302200210" \
+	org.opencontainers.image.base.digest="sha256:6ff97eeb4fbabda4238c8182076fdbd8302f4df15174216c8f9483f70f163b68" \
+	org.opencontainers.image.base.name="crashvb/supervisord:202303031721" \
 	org.opencontainers.image.created="${org_opencontainers_image_created}" \
 	org.opencontainers.image.description="Image containing slapd." \
 	org.opencontainers.image.licenses="Apache-2.0" \
@@ -29,7 +29,7 @@ RUN usermod --append --groups ssl-cert openldap && \
 COPY supervisord.slapd.conf /etc/supervisor/conf.d/slapd.conf
 
 # Configure: entrypoint
-COPY entrypoint.slapd /etc/entrypoint.d/10slapd
+COPY entrypoint.slapd /etc/entrypoint.d/slapd
 
 # Configure: healthcheck
 COPY healthcheck.slapd /etc/healthcheck.d/slapd

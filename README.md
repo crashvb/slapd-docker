@@ -37,7 +37,9 @@ The embedded entrypoint script is located at `/etc/entrypoint.d/10slapd` and per
 /
 ├─ etc/
 │  ├─ entrypoint.d/
-│  │  └─ 10slapd
+│  │  └─ slapd
+│  ├─ healthcheck.d/
+│  │  └─ slapd
 │  └─ supervisor/
 │     └─ config.d/
 │        └─ slapd.conf
@@ -58,10 +60,12 @@ The embedded entrypoint script is located at `/etc/entrypoint.d/10slapd` and per
       │  ├─ ldap-su-passwd
       │  ├─ ldap-su-useradd
       │  ├─ ldap-su-userdel
+      │  ├─ ldap-su-userlist
       │  ├─ ldap-test
       │  ├─ ldap-useradd
       │  ├─ ldap-userdel
-      │  └─ ldap-userhostaccess
+      │  ├─ ldap-userhostaccess
+      │  └─ ldap-userlist
       └─ share/
          └─ ldap/
             ├─ *.ldif

@@ -10,14 +10,12 @@ if [[ -n "${1}" ]] ; then
 	exit 1
 fi
 
-dn="${olcRootDN}"
-
-log "You are about to ${BOLD_RED}RESET${NC} the password for: ${BOLD_RED}${dn}${NC}"
+log "You are about to ${BOLD_RED}RESET${NC} the password for: ${BOLD_RED}${olcRootDN}${NC}"
 prompt_continue
 
 log "Existing configuration:"
 # https://wiki.debian.org/LDAP/OpenLDAPSetup#Administrator_Access
-#ldapsearch -b "${dn}" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ
+#ldapsearch -b "${olcRootDN}" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ
 tmp=$(grep "olcRootPW" "${SLAPD_CONFIG}/slapd.d/cn=config/olcDatabase={1}mdb.ldif")
 echo -e "${YELLOW}${tmp}${NC}"
 echo ""
@@ -33,10 +31,10 @@ cat <<- EOF | ldapmodify -d 256 -H ldapi:// -Q -Y EXTERNAL
 EOF
 
 log "Altered configuration:"
-#ldapsearch -b "${dn}" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ
+#ldapsearch -b "${olcRootDN}" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ
 tmp=$(grep "olcRootPW" "${SLAPD_CONFIG}/slapd.d/cn=config/olcDatabase={1}mdb.ldif")
 echo -e "${YELLOW}${tmp}${NC}"
 
 log "Testing ..."
-ldapwhoami -D "${dn}" -H ldapi:// -w "$(<"${secret}")" -x -ZZ
+ldapwhoami -D "${olcRootDN}" -H ldapi:// -w "$(<"${secret}")" -x -ZZ
 

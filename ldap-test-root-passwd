@@ -1,0 +1,22 @@
+#!/bin/bash
+
+set -e -o pipefail
+
+source /usr/local/lib/entrypoint.sh
+source /usr/local/lib/ldaputils.sh
+
+if [[ -n "${1}" ]] ; then
+	echo "usage ${0}" >&2
+	exit 1
+fi
+
+log "Existing configuration:"
+# https://wiki.debian.org/LDAP/OpenLDAPSetup#Administrator_Access
+#ldapsearch -b "${olcRootDN}" -H ldapi:// -LLL -Q -Y EXTERNAL -ZZ
+tmp=$(grep "olcRootPW" "${SLAPD_CONFIG}/slapd.d/cn=config/olcDatabase={1}mdb.ldif")
+echo -e "${YELLOW}${tmp}${NC}"
+echo ""
+
+log "Testing ..."
+ldapwhoami -D "${olcRootDN}" -H ldapi:// -w "$(<"${secret}")" -x -ZZ
+

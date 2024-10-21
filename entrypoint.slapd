@@ -69,7 +69,7 @@ if [[ ! -e "${EP_RUN}" ]] ; then
 		log "Starting slapd ..."
 		# For Debugging: slapd -d config -g openldap -h "ldapi:///" -u openldap &
 		slapd -g openldap -h "ldapi:///" -u openldap
-		while [[ ! -e /run/slapd/slapd.pid ]]; do
+		while [[ ! -e /run/slapd/slapd.pid ]] ; do
 			sleep 1
 		done
 
